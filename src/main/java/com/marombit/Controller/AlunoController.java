@@ -49,6 +49,30 @@ public class AlunoController {
         return ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Aluno> buscarAlunoPorId(@PathVariable Long id) {
+        Optional<Aluno> aluno = repository.findById(id);
+
+        if (aluno.isPresent()) {
+            return ResponseEntity.ok(aluno.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{id}/status")
+    public ResponseEntity<String> statusMatricula(@PathVariable Long id) {
+        Optional<Aluno> aluno = repository.findById(id);
+
+        if (aluno.isPresent()) {
+            if (aluno.get().getMatriculaAtiva() == true) {
+                return ResponseEntity.ok("Matricula Ativa!");
+            }
+            return ResponseEntity.ok("Matricula Inativa!");
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarAluno(@PathVariable Long id) {
         if (!repository.existsById(id)) {
