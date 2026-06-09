@@ -1,7 +1,9 @@
 package com.marombit.Controller;
 
+import com.marombit.Exception.CpfJaCadastradoException;
 import com.marombit.Model.Aluno;
 import com.marombit.Repository.AlunoRepository;
+import jakarta.validation.Valid;
 import jakarta.websocket.server.PathParam;
 import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,14 +26,18 @@ public class AlunoController {
     }
 
     @PostMapping()
-    public ResponseEntity<Aluno> criarAluno(@RequestBody Aluno aluno) {
+    public ResponseEntity<Aluno> criarAluno(@Valid @RequestBody Aluno aluno) {
+        if(repository.existsByCpf((aluno.getCpf()))) {
+            throw new CpfJaCadastradoException(aluno.getCpf());
+        }
+
         // var - Serve para tipagem, quando não sabemos o tipo de valor retornado
         var salvo = repository.save(aluno);
         return ResponseEntity.status(201).body(salvo);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Aluno> atualizarAluno(@PathVariable Long id, @RequestBody Aluno aluno) {
+    public ResponseEntity<Aluno> atualizarAluno(@Valid @PathVariable Long id, @RequestBody Aluno aluno) {
         Optional<Aluno> alunoExist = repository.findById(id);
 
         if (alunoExist.isPresent()) {
