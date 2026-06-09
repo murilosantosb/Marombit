@@ -1,90 +1,68 @@
 package com.marombit.Controller;
 
-import com.marombit.Exception.CpfJaCadastradoException;
 import com.marombit.Model.Aluno;
-import com.marombit.Repository.AlunoRepository;
+import com.marombit.Service.AlunoService;
 import jakarta.validation.Valid;
-import jakarta.websocket.server.PathParam;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/alunos")
 public class AlunoController {
 
     @Autowired
-    private AlunoRepository repository;
+    private AlunoService service;
 
-    @GetMapping()
-    public List<Aluno> listarTodos() {
-        return repository.findAll();
+    public AlunoController(AlunoService service) {
+        this.service = service;
     }
 
-    @PostMapping()
-    public ResponseEntity<Aluno> criarAluno(@Valid @RequestBody Aluno aluno) {
-        if(repository.existsByCpf((aluno.getCpf()))) {
-            throw new CpfJaCadastradoException(aluno.getCpf());
-        }
+    @GetMapping
+    public List<Aluno> listarTodos() {
+        return service.listarTodos();
+    }
 
-        // var - Serve para tipagem, quando não sabemos o tipo de valor retornado
-        var salvo = repository.save(aluno);
+    @PostMapping
+    public ResponseEntity<Aluno> criarAluno(@Valid @RequestBody Aluno aluno) {
+        Aluno salvo = service.criarAluno(aluno);
         return ResponseEntity.status(201).body(salvo);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Aluno> atualizarAluno(@Valid @PathVariable Long id, @RequestBody Aluno aluno) {
-        Optional<Aluno> alunoExist = repository.findById(id);
-
-        if (alunoExist.isPresent()) {
-            Aluno alunoAtualizado = alunoExist.get();
-
-            alunoAtualizado.setNome(aluno.getNome());
-            alunoAtualizado.setCpf(aluno.getCpf());
-            alunoAtualizado.setDtNascimento(aluno.getDtNascimento());
-            alunoAtualizado.setPlano(aluno.getPlano());
-            alunoAtualizado.setMatriculaAtiva(aluno.getMatriculaAtiva());
-
-            Aluno salvo = repository.save(alunoAtualizado);
-            return ResponseEntity.ok(salvo);
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Aluno> atualizarAluno(@PathVariable Long id, @Valid @RequestBody Aluno aluno) {
+        Aluno atualizado = service.atualizar(id, aluno);
+        return ResponseEntity.ok(atualizado);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Aluno> buscarAlunoPorId(@PathVariable Long id) {
-        Optional<Aluno> aluno = repository.findById(id);
-
-        if (aluno.isPresent()) {
-            return ResponseEntity.ok(aluno.get());
-        }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(service.buscarId(id));
     }
 
     @GetMapping("/{id}/status")
     public ResponseEntity<String> statusMatricula(@PathVariable Long id) {
-        Optional<Aluno> aluno = repository.findById(id);
+        Aluno aluno = service.buscarId(id);
 
-        if (aluno.isPresent()) {
-            if (aluno.get().getMatriculaAtiva() == true) {
-                return ResponseEntity.ok("Matricula Ativa!");
-            }
-            return ResponseEntity.ok("Matricula Inativa!");
+        if (aluno.getMatriculaAtiva()) {
+            return ResponseEntity.ok("Matricula Ativa");
         }
 
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.ok("Matricula inativa");
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarAluno(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        repository.deleteById(id);
+        service.deletarAluno(id);
         return ResponseEntity.noContent().build();
     }
 }

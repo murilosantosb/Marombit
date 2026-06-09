@@ -1,7 +1,6 @@
 package com.marombit.Exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -29,10 +28,18 @@ public class ExceptionHandlerController {
     }
 
     @ExceptionHandler(CpfJaCadastradoException.class)
-    public ResponseEntity<Map<String, String>> handleConflito(CpfJaCadastradoException erro) {
+    public ResponseEntity<Map<String, String>> handleCpfJaCadastrado(CpfJaCadastradoException erro) {
         Map<String, String> error = new HashMap<>();
 
         error.put("erro", erro.getMessage());
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(AlunoNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleAlunoNaoEncontrado(AlunoNotFoundException erro) {
+        Map<String, String> error = new HashMap<>();
+
+        error.put("erro", erro.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 }
